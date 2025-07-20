@@ -1,5 +1,8 @@
 import { cart,removeFromCart } from '../data/cart.js';
 import { products } from '../data/products.js';
+import dayjs from 'https://unpkg.com/supersimpledev@8.5.0/dayjs/esm/index.js';
+import {formatMoney} from '../scripts/money.js';
+import {deliveryOptions} from '../scripts/delivery.js'
 
 let cartCode = "";
 
@@ -30,7 +33,7 @@ cart.forEach((cartItem => {
                   ${matched.name}
                 </div>
                 <div class="product-price">
-                  ${(matched.priceCents / 100).toFixed(2)}
+                  ${formatMoney(matched.priceCents)}
                 </div>
                 <div class="product-quantity">
                   <span>
