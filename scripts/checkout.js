@@ -9,7 +9,6 @@ let cartCode = "";
 cart.forEach((cartItem => {
 
   const productId = cartItem.productId;
-
   let matched;
 
   products.forEach((product) => {
@@ -18,12 +17,20 @@ cart.forEach((cartItem => {
     }
   });
 
+  let date = dayjs().add(1,'days').format("dddd, MMMM D");
+
+  deliveryOptions.forEach((dOpt) => {
+    if(cartItem.deliveryOptionId == dOpt.id){
+        date = dayjs().add(dOpt.deliveryDays,'days').format("dddd, MMMM D");
+    }
+  });
+
+
   cartCode += `
         <div class="cart-item-container js-cart-item-container-${matched.id}">
             <div class="delivery-date">
-              Delivery date: Tuesday, June 21
+              Delivery date: ${date}
             </div>
-
             <div class="cart-item-details-grid">
               <img class="product-image"
                 src="${matched.image}">
@@ -33,7 +40,7 @@ cart.forEach((cartItem => {
                   ${matched.name}
                 </div>
                 <div class="product-price">
-                  ${formatMoney(matched.priceCents)}
+                  $${formatMoney(matched.priceCents)}
                 </div>
                 <div class="product-quantity">
                   <span>
@@ -74,7 +81,7 @@ function deliveryOptionsHTML(matchedId,cartItem){
     <div class="delivery-option">
       <input type="radio" ${checkedString}
         class="delivery-option-input"
-        name="delivery-option-${matchedId}">
+        name="delivery-option-${matchedId}" data-product-id = ${matchedId} data-delivery-type = ${dOpt.id}>
       <div>
         <div class="delivery-option-date">
           ${date}
@@ -88,6 +95,10 @@ function deliveryOptionsHTML(matchedId,cartItem){
   return deliveryOptCode;
 }
 
+function deliveryDateChange(matchedId){
+
+}
+
 document.querySelector('.js-order-summary').innerHTML = cartCode;
 
 
@@ -97,4 +108,22 @@ document.querySelectorAll('.js-delete-quantity-link').forEach((link) => {
       removeFromCart(productId);
       document.querySelector(`.js-cart-item-container-${productId}`).remove();
   });
+});
+
+document.querySelectorAll(".delivery-option-input").forEach((deliveryInput) =>{
+    deliveryInput.addEventListener("change",() => {
+        const productId = deliveryInput.dataset.productId;
+        cart.forEach((cartItem)=> {
+            if(cartItem.productId === productId){
+                cartItem.deliveryOptionId = deliveryInput.dataset.deliveryType;
+                let date = dayjs().add(1,'days').format("dddd, MMMM D");
+                deliveryOptions.forEach((dOpt) => {
+                  if(cartItem.deliveryOptionId == dOpt.id){
+                      date = dayjs().add(dOpt.deliveryDays,'days').format("dddd, MMMM D");
+                  }
+                });
+                document.querySelector(`.js-cart-item-container-${productId}`).querySelector(".delivery-date").innerText = `Delivery date: ${date}`;
+            }
+        });
+    });
 });

@@ -24,7 +24,7 @@ products.forEach((product) => {
           </div>
 
           <div class="product-price">
-            ${(product.priceCents / 100).toFixed(2)}
+             $${(product.priceCents / 100).toFixed(2)}
           </div>
 
           <div class="product-quantity-container">
@@ -66,6 +66,7 @@ function updateCartQuantity() {
   });
   document.querySelector(".js-cart-quantity").innerHTML = cqty;
 }
+updateCartQuantity();
 
 document.querySelectorAll('.js-add-to-cart').forEach((button) => {
   button.addEventListener('click', () => {
