@@ -4,6 +4,8 @@ import dayjs from 'https://unpkg.com/supersimpledev@8.5.0/dayjs/esm/index.js';
 import {formatMoney} from '../scripts/money.js';
 import {deliveryOptions} from '../data/deliveryOptions.js'
 
+
+
 let cartCode = "";
 
 cart.forEach((cartItem => {
@@ -66,6 +68,8 @@ cart.forEach((cartItem => {
     `;
 }));
 
+document.querySelector('.js-order-summary').innerHTML = cartCode;
+
 function deliveryOptionsHTML(matchedId,cartItem){
   let deliveryOptCode = "";
   deliveryOptions.forEach((dOpt) => {
@@ -95,18 +99,70 @@ function deliveryOptionsHTML(matchedId,cartItem){
   return deliveryOptCode;
 }
 
-function deliveryDateChange(matchedId){
-
+function getShippingFee(doptid){
+    const option = deliveryOptions.find((option) => option.id === doptid);
+    if (option) {
+      return option.priceCents;
+    }
+    return 0;
 }
 
-document.querySelector('.js-order-summary').innerHTML = cartCode;
+function billUpdater(){
+    let noTaxTotal = 0;
+    let totalCartItems = 0;
+    let shippingFee = 0;
+    cart.forEach((cartItem)=>{
+      shippingFee += getShippingFee(cartItem.deliveryOptionId);
+      totalCartItems += cartItem.quantity;
+        products.forEach((product) => {
+            if(cartItem.productId === product.id){
+               noTaxTotal += cartItem.quantity*(product.priceCents);
+            }
+        });
+    });
+    console.log(shippingFee);
+    const billHTML = `
+          <div class="payment-summary-title">
+            Order Summary
+          </div>
 
+          <div class="payment-summary-row">
+            <div>Items (${totalCartItems}):</div>
+            <div class="payment-summary-money">$${formatMoney(noTaxTotal)}</div>  
+          </div>
+
+          <div class="payment-summary-row">
+            <div>Shipping &amp; handling:</div>
+            <div class="payment-summary-money">$${formatMoney(shippingFee)}</div>
+          </div>
+
+          <div class="payment-summary-row subtotal-row">
+            <div>Total before tax:</div>
+            <div class="payment-summary-money">$${formatMoney(noTaxTotal + shippingFee)}</div>
+          </div>
+
+          <div class="payment-summary-row">
+            <div>Estimated tax (10%):</div>
+            <div class="payment-summary-money">$${formatMoney(0.1*(noTaxTotal + shippingFee))}</div>
+          </div>
+
+          <div class="payment-summary-row total-row">
+            <div>Order total:</div>
+            <div class="payment-summary-money">$${formatMoney(noTaxTotal + shippingFee + 0.1*(noTaxTotal + shippingFee))}</div>
+          </div>
+
+          <button class="place-order-button button-primary">
+            Place your order
+          </button>`;
+    document.querySelector(".payment-summary").innerHTML = billHTML;
+}
 
 document.querySelectorAll('.js-delete-quantity-link').forEach((link) => {
   link.addEventListener('click', () => {
       const productId = link.dataset.productId;
       removeFromCart(productId);
       document.querySelector(`.js-cart-item-container-${productId}`).remove();
+      billUpdater();
   });
 });
 
@@ -115,7 +171,7 @@ document.querySelectorAll(".delivery-option-input").forEach((deliveryInput) =>{
         const productId = deliveryInput.dataset.productId;
         cart.forEach((cartItem)=> {
             if(cartItem.productId === productId){
-                cartItem.deliveryOptionId = deliveryInput.dataset.deliveryType;
+                cartItem.deliveryOptionId = Number(deliveryInput.dataset.deliveryType);
                 let date = dayjs().add(1,'days').format("dddd, MMMM D");
                 deliveryOptions.forEach((dOpt) => {
                   if(cartItem.deliveryOptionId == dOpt.id){
@@ -123,7 +179,10 @@ document.querySelectorAll(".delivery-option-input").forEach((deliveryInput) =>{
                   }
                 });
                 document.querySelector(`.js-cart-item-container-${productId}`).querySelector(".delivery-date").innerText = `Delivery date: ${date}`;
+                billUpdater();
             }
         });
     });
 });
+
+billUpdater();
